@@ -3,6 +3,24 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      (function (location) {
+        if (location.search[1] === "/") {
+          var decoded = location.search
+            .slice(1)
+            .split("&")
+            .map(function (part) {
+              return part.replace(/~and~/g, "&");
+            })
+            .join("?");
+          window.history.replaceState(
+            null,
+            "",
+            location.pathname.slice(0, -1) + decoded + location.hash,
+          );
+        }
+      })(window.location);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="kris10 — home, lately, games, books, and other." />
     <meta name="theme-color" content="#f3f2ef" />
@@ -13,9 +31,10 @@
       href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Outfit:wght@400;500&family=Syne:wght@700;800&display=swap"
       rel="stylesheet"
     />
+    <script type="module" crossorigin src="/assets/index-DCgMsWIl.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BwEP2wUx.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

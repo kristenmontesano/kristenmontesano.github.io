@@ -69,17 +69,21 @@ void main() {
 `;
 
 const covers = [
-  { id: "1174180", title: "Red Dead Redemption 2", src: "/steam/1174180.jpg" },
-  { id: "2000120", title: "Time Flies", src: "/steam/2000120.jpg" },
-  { id: "2366980", title: "Thank Goodness You're Here!", src: "/steam/2366980.jpg" },
-  { id: "1456880", title: "ElecHead", src: "/steam/1456880.jpg" },
-  { id: "1102130", title: "Florence", src: "/steam/1102130.jpg" },
-  { id: "2359120", title: "Consume Me", src: "/steam/2359120.jpg" },
-  { id: "1593030", title: "Terra Nil", src: "/steam/1593030.jpg" },
+  { id: "1174180", title: "Red Dead Redemption 2" },
+  { id: "2000120", title: "Time Flies" },
+  { id: "2366980", title: "Thank Goodness You're Here!" },
+  { id: "1456880", title: "ElecHead" },
+  { id: "1102130", title: "Florence" },
+  { id: "2359120", title: "Consume Me" },
+  { id: "1593030", title: "Terra Nil" },
 ];
 
 function steamUrl(id: string) {
   return `https://store.steampowered.com/app/${id}/`;
+}
+
+function coverSrc(id: string) {
+  return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }
 
 const COVER_TILT = [-0.09, 0.06, -0.045, 0.08, -0.07, 0.05, -0.035];
@@ -399,11 +403,12 @@ export function GamesCanvas() {
 
     covers.forEach((cover, index) => {
       const image = new Image();
+      image.crossOrigin = "anonymous";
       image.onload = () => {
         loaded[index] = { id: cover.id, image };
         uploadCollage();
       };
-      image.src = cover.src;
+      image.src = coverSrc(cover.id);
     });
     document.fonts.load("600 64px Caveat").then(() => uploadCollage());
 
