@@ -12,8 +12,8 @@ precision highp float;
 uniform vec2 u_resolution;
 uniform vec2 u_galaxy;
 uniform float u_dpr;
-uniform float u_time;
 uniform sampler2D u_hidden;
+uniform sampler2D u_title;
 uniform float u_hasImage;
 uniform float u_fit;
 
@@ -22,18 +22,6 @@ void main() {
   vec3 paper = vec3(243.0, 242.0, 239.0) / 255.0;
   vec3 ink = vec3(22.0, 19.0, 17.0) / 255.0;
   vec3 color = paper;
-  float cycle = 16.0;
-  float travel = 4.5;
-  float passed = mod(u_time, cycle);
-  float progress = clamp(passed / travel, 0.0, 1.0);
-  float waveAngle = fract(sin((floor(u_time / cycle) + 2.3) * 17.13) * 43758.5453) * 6.2831853;
-  vec2 waveDir = vec2(cos(waveAngle), sin(waveAngle));
-  vec2 wavePerp = vec2(-waveDir.y, waveDir.x);
-  float crest = mix(-1.15, 1.15, progress);
-  float along = dot(uv - 0.5, waveDir);
-  float bow = sin(dot(uv - 0.5, wavePerp) * 5.0) * 0.05;
-  float delta = (along - crest - bow) / 0.16;
-  float wave = exp(-delta * delta) * step(passed, travel);
   vec2 p = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
   vec2 focus = (u_galaxy - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
   vec2 q = p - focus;
@@ -42,10 +30,22 @@ void main() {
   float lens = (1.0 - smoothstep(glass - 0.024, glass - 0.007, r)) * u_hasImage;
   if (u_hasImage > 0.5) {
     vec3 hidden = texture2D(u_hidden, vec2(uv.x, 1.0 - uv.y)).rgb;
-    color = mix(color, mix(hidden, ink, 0.42), wave);
     float rim = smoothstep(glass * 0.42, glass * 0.94, r);
     color = mix(color, mix(hidden, color, rim * 0.28), lens);
   }
+
+  float spacing = 20.0 * u_dpr;
+  vec2 cell = floor(gl_FragCoord.xy / spacing);
+  vec2 center = (cell + 0.5) * spacing;
+  float gap = length(gl_FragCoord.xy - center);
+  float dotRadius = max(u_dpr * 1.05, 0.8);
+  float mark = 1.0 - smoothstep(dotRadius * 0.15, dotRadius, gap);
+  float page = 1.0 - lens;
+  color = mix(color, ink, mark * page);
+
+  vec4 title = texture2D(u_title, vec2(uv.x, 1.0 - uv.y));
+  color = mix(color, title.rgb, title.a * page);
+
   float line = 0.0032;
   float outerRim = 1.0 - smoothstep(0.0, line, abs(r - (glass + 0.014)));
   float bezel = 1.0 - smoothstep(0.01, 0.017, abs(r - glass));
@@ -55,14 +55,6 @@ void main() {
   float acrossGrip = abs(dot(q, vec2(-grip.y, grip.x)));
   float handle = step(glass * 1.035, alongGrip) * step(alongGrip, glass * 1.41) * (1.0 - smoothstep(glass * 0.052, glass * 0.074, acrossGrip));
   color = mix(color, ink, max(bezel, max(handle, max(outerRim, innerRim))));
-
-  float spacing = 20.0 * u_dpr;
-  vec2 cell = floor(gl_FragCoord.xy / spacing);
-  vec2 center = (cell + 0.5) * spacing;
-  float gap = length(gl_FragCoord.xy - center);
-  float dotRadius = max(u_dpr * 1.05, 0.8);
-  float mark = 1.0 - smoothstep(dotRadius * 0.15, dotRadius, gap);
-  color = mix(color, ink, mark * (1.0 - max(lens, wave)));
 
   gl_FragColor = vec4(color, 1.0);
 }
@@ -110,7 +102,12 @@ function balancedRows(count: number) {
   return splits;
 }
 
-function layoutEqual(viewW: number, viewH: number, count: number, aspect: number) {
+function layoutEqual(
+  viewW: number,
+  viewH: number,
+  count: number,
+  aspect: number,
+) {
   let best: { score: number; boxes: CoverBox[] } | null = null;
   const screenRatio = viewW / viewH;
   for (const rows of balancedRows(count)) {
@@ -119,7 +116,10 @@ function layoutEqual(viewW: number, viewH: number, count: number, aspect: number
     const denom = aspect * (columns - 1) - screenRatio * (rowCount - 1);
     const numer = aspect * columns - screenRatio * rowCount;
     const ideal = denom === 0 ? 0.12 : numer / denom;
-    const overlap = Math.min(0.2, Math.max(0.08, Number.isFinite(ideal) ? ideal : 0.12));
+    const overlap = Math.min(
+      0.2,
+      Math.max(0.08, Number.isFinite(ideal) ? ideal : 0.12),
+    );
     let width = viewW / (columns - (columns - 1) * overlap);
     let height = width / aspect;
     let blockW = columns * width - (columns - 1) * overlap * width;
@@ -176,16 +176,14 @@ type PlacedCover = {
   tilt: number;
 };
 
-function paintCollage(
-  target: HTMLCanvasElement,
-  images: LoadedCover[],
-  pixelRatio: number,
-) {
+function paintCollage(target: HTMLCanvasElement, images: LoadedCover[]) {
   const context = target.getContext("2d");
   if (!context) return [];
   const aspect =
-    images.reduce((sum, item) => sum + item.image.naturalWidth / item.image.naturalHeight, 0) /
-    images.length;
+    images.reduce(
+      (sum, item) => sum + item.image.naturalWidth / item.image.naturalHeight,
+      0,
+    ) / images.length;
   const margin = Math.min(target.width, target.height) * 0.02;
   const boxes = layoutEqual(
     target.width - margin * 2,
@@ -213,69 +211,60 @@ function paintCollage(
     context.shadowOffsetY = box.h * 0.02;
     context.drawImage(item.image, -box.w / 2, -box.h / 2, box.w, box.h);
     context.restore();
-    return { id: item.id, cx: centerX, cy: centerY, w: box.w, h: box.h, tilt: box.tilt };
+    return {
+      id: item.id,
+      cx: centerX,
+      cy: centerY,
+      w: box.w,
+      h: box.h,
+      tilt: box.tilt,
+    };
   });
-  drawTapedTitle(context, target, pixelRatio);
   return placed;
 }
 
-function drawTapedTitle(
-  context: CanvasRenderingContext2D,
-  target: HTMLCanvasElement,
-  pixelRatio: number,
-) {
-  const rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-  const header = document.querySelector(".site-header");
-  const headerPx = header?.getBoundingClientRect().height ?? 4.25 * rootSize;
-  const top = headerPx * pixelRatio + rootSize * pixelRatio * 0.35;
-  const text = "What I've been playing lately";
-  let fontSize = Math.min(target.height * 0.07, target.width * 0.055);
-  context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
-  while (context.measureText(text).width > target.width * 0.7 && fontSize > 16 * pixelRatio) {
-    fontSize *= 0.92;
-    context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
-  }
-  const textWidth = context.measureText(text).width;
-  const paperW = textWidth + fontSize * 1.35;
-  const paperH = fontSize * 1.7;
-  const tapeH = fontSize * 0.42;
-  const centerX = target.width / 2;
-  const centerY = top + tapeH + paperH * 0.62;
-
-  context.save();
-  context.translate(centerX, centerY);
-  context.rotate(-0.045);
-  context.shadowColor = "rgba(0, 0, 0, 0.32)";
-  context.shadowBlur = fontSize * 0.35;
-  context.shadowOffsetY = fontSize * 0.12;
-  context.fillStyle = "#f3ecdf";
-  context.beginPath();
-  context.roundRect(-paperW / 2, -paperH / 2, paperW, paperH, fontSize * 0.08);
-  context.fill();
-  context.shadowColor = "transparent";
-
-  const tapeW = fontSize * 1.7;
-  const stick = (x: number, y: number, angle: number) => {
-    context.save();
-    context.translate(x, y);
-    context.rotate(angle);
-    context.fillStyle = "rgba(214, 186, 108, 0.78)";
-    context.fillRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH);
-    context.fillStyle = "rgba(255, 255, 255, 0.18)";
-    context.fillRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH * 0.28);
-    context.restore();
-  };
-  stick(-paperW * 0.32, -paperH / 2, 0.16);
-  stick(paperW * 0.32, -paperH / 2, -0.2);
-
-  context.fillStyle = "#2a1c24";
+function paintTitle(target: HTMLCanvasElement, cssWidth: number) {
+  const context = target.getContext("2d");
+  if (!context || cssWidth < 1) return;
+  context.clearRect(0, 0, target.width, target.height);
+  const root =
+    parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const narrow = cssWidth < 720;
+  const preferred = (narrow ? 16 : 12) * (cssWidth / 100);
+  const min = (narrow ? 2.7 : 3.2) * root;
+  const max = (narrow ? 4.4 : 7) * root;
+  const scale = target.width / cssWidth;
+  const fontSize = Math.min(max, Math.max(min, preferred)) * scale;
+  context.font = `800 ${fontSize}px Syne, sans-serif`;
+  context.letterSpacing = "-0.05em";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(text, 0, fontSize * 0.06);
-  context.restore();
+  const x = target.width / 2;
+  const y = target.height / 2;
+  const shadows: Array<[number, number, string]> = narrow
+    ? [
+        [-4, -1, "#00e8ff"],
+        [5, 2, "#ffe500"],
+        [2, -4, "#ff00d0"],
+      ]
+    : [
+        [-7, -2, "#00e8ff"],
+        [8, 3, "#ffe500"],
+        [3, -6, "#ff00d0"],
+      ];
+  for (const [dx, dy, color] of shadows) {
+    context.fillStyle = color;
+    context.fillText("Lately", x + dx * scale, y + dy * scale);
+  }
+  context.fillStyle = "#161311";
+  context.fillText("Lately", x, y);
 }
 
-function compileShader(gl: WebGLRenderingContext, type: number, source: string) {
+function compileShader(
+  gl: WebGLRenderingContext,
+  type: number,
+  source: string,
+) {
   const shader = gl.createShader(type);
   if (!shader) return null;
   gl.shaderSource(shader, source);
@@ -301,10 +290,7 @@ function glassFit(cssWidth: number, cssHeight: number) {
 
 function overChrome(event: Event) {
   const target = event.target;
-  return (
-    target instanceof Element &&
-    Boolean(target.closest(".site-header"))
-  );
+  return target instanceof Element && Boolean(target.closest(".site-header"));
 }
 
 export function GamesCanvas() {
@@ -326,7 +312,11 @@ export function GamesCanvas() {
     if (!gl) return;
 
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
-    const fragmentShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+    const fragmentShader = compileShader(
+      gl,
+      gl.FRAGMENT_SHADER,
+      fragmentSource,
+    );
     if (!vertexShader || !fragmentShader) return;
 
     const program = gl.createProgram();
@@ -352,8 +342,8 @@ export function GamesCanvas() {
     const resolutionLoc = gl.getUniformLocation(program, "u_resolution");
     const galaxyLoc = gl.getUniformLocation(program, "u_galaxy");
     const dprLoc = gl.getUniformLocation(program, "u_dpr");
-    const timeLoc = gl.getUniformLocation(program, "u_time");
     const hiddenLoc = gl.getUniformLocation(program, "u_hidden");
+    const titleLoc = gl.getUniformLocation(program, "u_title");
     const hasImageLoc = gl.getUniformLocation(program, "u_hasImage");
     const fitLoc = gl.getUniformLocation(program, "u_fit");
 
@@ -377,9 +367,30 @@ export function GamesCanvas() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.uniform1i(hiddenLoc, 0);
 
+    const titleTexture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, titleTexture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      1,
+      1,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array([0, 0, 0, 0]),
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.uniform1i(titleLoc, 1);
+
     let hasImage = 0;
     let running = true;
     const collage = document.createElement("canvas");
+    const titleCanvas = document.createElement("canvas");
     const loaded: Array<LoadedCover | undefined> = [];
     let placedCovers: PlacedCover[] = [];
 
@@ -391,14 +402,40 @@ export function GamesCanvas() {
         collage.width = canvas.width;
         collage.height = canvas.height;
       }
-      placedCovers = paintCollage(
-        collage,
-        ready,
-        canvas.width / Math.max(canvas.clientWidth, 1),
-      );
+      placedCovers = paintCollage(collage, ready);
+      gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, collage);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        collage,
+      );
       hasImage = 1;
+    };
+
+    const uploadTitle = () => {
+      if (!running || canvas.width < 2 || canvas.height < 2) return;
+      if (
+        titleCanvas.width !== canvas.width ||
+        titleCanvas.height !== canvas.height
+      ) {
+        titleCanvas.width = canvas.width;
+        titleCanvas.height = canvas.height;
+      }
+      paintTitle(titleCanvas, canvas.clientWidth);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, titleTexture);
+      gl.texImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        titleCanvas,
+      );
     };
 
     covers.forEach((cover, index) => {
@@ -410,19 +447,21 @@ export function GamesCanvas() {
       };
       image.src = coverSrc(cover.id);
     });
-    document.fonts.load("600 64px Caveat").then(() => uploadCollage());
+    document.fonts.load("800 64px Syne").then(() => uploadTitle());
 
     const pointer = { x: -1, y: -1 };
     const narrow = window.innerWidth < 720;
     const galaxy = narrow ? { x: 0.5, y: 0.46 } : { x: 0.58, y: 0.5 };
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
     let laidOutWidth = 0;
     let laidOutHeight = 0;
 
     const pixelRatio = () => {
       const native = window.devicePixelRatio || 1;
-      return Math.min(native, coarsePointer || window.innerWidth < 900 ? 1.25 : 1.5);
+      return Math.min(
+        native,
+        coarsePointer || window.innerWidth < 900 ? 1.25 : 1.5,
+      );
     };
 
     const resize = () => {
@@ -438,10 +477,12 @@ export function GamesCanvas() {
         laidOutWidth = width;
         laidOutHeight = height;
         uploadCollage();
+        uploadTitle();
       }
     };
 
-    const touchDrag = coarsePointer || window.matchMedia("(hover: none)").matches;
+    const touchDrag =
+      coarsePointer || window.matchMedia("(hover: none)").matches;
     let dragging = false;
     let tracking = false;
     let gestureMoved = false;
@@ -478,7 +519,8 @@ export function GamesCanvas() {
         const sin = Math.sin(cover.tilt);
         const localX = dx * cos + dy * sin;
         const localY = -dx * sin + dy * cos;
-        if (Math.abs(localX) <= cover.w / 2 && Math.abs(localY) <= cover.h / 2) return cover.id;
+        if (Math.abs(localX) <= cover.w / 2 && Math.abs(localY) <= cover.h / 2)
+          return cover.id;
       }
       return null;
     };
@@ -542,10 +584,11 @@ export function GamesCanvas() {
     };
 
     const hintTimer = window.setTimeout(() => {
-      if (!hasDragged && touchDrag && hintRef.current) hintRef.current.hidden = false;
+      if (!hasDragged && touchDrag && hintRef.current)
+        hintRef.current.hidden = false;
     }, HINT_DELAY);
 
-    const draw = (now: number) => {
+    const draw = () => {
       if (!running) return;
       resize();
       if (pointer.x >= 0) {
@@ -560,14 +603,14 @@ export function GamesCanvas() {
       gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
       gl.uniform2f(galaxyLoc, galaxy.x, galaxy.y);
       gl.uniform1f(dprLoc, pixelRatio());
-      gl.uniform1f(timeLoc, reduceMotion ? 0 : now * 0.001);
       gl.uniform1f(hasImageLoc, hasImage);
       const fit = glassFit(canvas.clientWidth, canvas.clientHeight);
       gl.uniform1f(fitLoc, fit);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       if (!touchDrag && lastClientX >= 0) {
         const hit =
-          pointInLens(lastClientX, lastClientY) && coverAt(lastClientX, lastClientY);
+          pointInLens(lastClientX, lastClientY) &&
+          coverAt(lastClientX, lastClientY);
         canvas.style.cursor = hit ? "pointer" : "";
       }
       const hint = hintRef.current;
@@ -578,7 +621,8 @@ export function GamesCanvas() {
         const fit = glassFit(rect.width, rect.height);
         const lift = GLASS_RADIUS * fit * rect.height + 14;
         const headerBottom =
-          document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+          document.querySelector(".site-header")?.getBoundingClientRect()
+            .bottom ?? 0;
         const hintTop = Math.max(headerBottom + 6, y - lift);
         hint.style.transform = `translate(${x}px, ${hintTop}px) translate(-50%, -100%)`;
       }
@@ -610,6 +654,7 @@ export function GamesCanvas() {
       canvas.removeEventListener("click", onClick);
       document.removeEventListener("visibilitychange", onVisibility);
       gl.deleteTexture(texture);
+      gl.deleteTexture(titleTexture);
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
       gl.deleteShader(vertexShader);
@@ -619,7 +664,11 @@ export function GamesCanvas() {
 
   return (
     <>
-      <canvas ref={canvasRef} className="webgl-canvas games-canvas" aria-hidden="true" />
+      <canvas
+        ref={canvasRef}
+        className="webgl-canvas games-canvas"
+        aria-hidden="true"
+      />
       <ul className="sr-only">
         {covers.map((cover) => (
           <li key={cover.id}>
