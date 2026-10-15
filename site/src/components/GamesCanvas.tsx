@@ -176,7 +176,11 @@ type PlacedCover = {
   tilt: number;
 };
 
-function paintCollage(target: HTMLCanvasElement, images: LoadedCover[]) {
+function paintCollage(
+  target: HTMLCanvasElement,
+  images: LoadedCover[],
+  pixelRatio: number,
+) {
   const context = target.getContext("2d");
   if (!context) return [];
   const aspect =
@@ -220,7 +224,68 @@ function paintCollage(target: HTMLCanvasElement, images: LoadedCover[]) {
       tilt: box.tilt,
     };
   });
+  drawTapedTitle(context, target, pixelRatio);
   return placed;
+}
+
+function drawTapedTitle(
+  context: CanvasRenderingContext2D,
+  target: HTMLCanvasElement,
+  pixelRatio: number,
+) {
+  const rootSize =
+    parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const header = document.querySelector(".site-header");
+  const headerPx = header?.getBoundingClientRect().height ?? 4.25 * rootSize;
+  const top = headerPx * pixelRatio + rootSize * pixelRatio * 0.35;
+  const text = "What I've been playing lately";
+  let fontSize = Math.min(target.height * 0.07, target.width * 0.055);
+  context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
+  while (
+    context.measureText(text).width > target.width * 0.7 &&
+    fontSize > 16 * pixelRatio
+  ) {
+    fontSize *= 0.92;
+    context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
+  }
+  const textWidth = context.measureText(text).width;
+  const paperW = textWidth + fontSize * 1.35;
+  const paperH = fontSize * 1.7;
+  const tapeH = fontSize * 0.42;
+  const centerX = target.width / 2;
+  const centerY = top + tapeH + paperH * 0.62;
+
+  context.save();
+  context.translate(centerX, centerY);
+  context.rotate(-0.045);
+  context.shadowColor = "rgba(0, 0, 0, 0.32)";
+  context.shadowBlur = fontSize * 0.35;
+  context.shadowOffsetY = fontSize * 0.12;
+  context.fillStyle = "#f3ecdf";
+  context.beginPath();
+  context.roundRect(-paperW / 2, -paperH / 2, paperW, paperH, fontSize * 0.08);
+  context.fill();
+  context.shadowColor = "transparent";
+
+  const tapeW = fontSize * 1.7;
+  const stick = (x: number, y: number, angle: number) => {
+    context.save();
+    context.translate(x, y);
+    context.rotate(angle);
+    context.fillStyle = "rgba(214, 186, 108, 0.78)";
+    context.fillRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH);
+    context.fillStyle = "rgba(255, 255, 255, 0.18)";
+    context.fillRect(-tapeW / 2, -tapeH / 2, tapeW, tapeH * 0.28);
+    context.restore();
+  };
+  stick(-paperW * 0.32, -paperH / 2, 0.16);
+  stick(paperW * 0.32, -paperH / 2, -0.2);
+
+  context.fillStyle = "#2a1c24";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(text, 0, fontSize * 0.06);
+  context.restore();
 }
 
 function paintTitle(target: HTMLCanvasElement, cssWidth: number) {
@@ -238,9 +303,11 @@ function paintTitle(target: HTMLCanvasElement, cssWidth: number) {
   context.font = `800 ${fontSize}px Syne, sans-serif`;
   context.letterSpacing = "-0.05em";
   context.textAlign = "center";
-  context.textBaseline = "middle";
+  context.textBaseline = "top";
+  const header = document.querySelector(".site-header");
+  const headerCss = header?.getBoundingClientRect().height ?? 4.25 * root;
   const x = target.width / 2;
-  const y = target.height / 2;
+  const y = (headerCss + 50) * scale;
   const shadows: Array<[number, number, string]> = narrow
     ? [
         [-4, -1, "#00e8ff"],
@@ -402,7 +469,11 @@ export function GamesCanvas() {
         collage.width = canvas.width;
         collage.height = canvas.height;
       }
-      placedCovers = paintCollage(collage, ready);
+      placedCovers = paintCollage(
+        collage,
+        ready,
+        canvas.width / Math.max(canvas.clientWidth, 1),
+      );
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(
@@ -448,6 +519,7 @@ export function GamesCanvas() {
       image.src = coverSrc(cover.id);
     });
     document.fonts.load("800 64px Syne").then(() => uploadTitle());
+    document.fonts.load("600 64px Caveat").then(() => uploadCollage());
 
     const pointer = { x: -1, y: -1 };
     const narrow = window.innerWidth < 720;
