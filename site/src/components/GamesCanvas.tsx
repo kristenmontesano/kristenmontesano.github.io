@@ -50,11 +50,19 @@ void main() {
   float outerRim = 1.0 - smoothstep(0.0, line, abs(r - (glass + 0.014)));
   float bezel = 1.0 - smoothstep(0.01, 0.017, abs(r - glass));
   float innerRim = 1.0 - smoothstep(0.0, line * 0.8, abs(r - (glass - 0.016)));
+  float outerR = glass + 0.014;
+  float unit = outerR / 0.42;
   vec2 grip = normalize(vec2(0.82, -0.58));
-  float alongGrip = dot(q, grip);
-  float acrossGrip = abs(dot(q, vec2(-grip.y, grip.x)));
-  float handle = step(glass * 1.035, alongGrip) * step(alongGrip, glass * 1.41) * (1.0 - smoothstep(glass * 0.052, glass * 0.074, acrossGrip));
-  color = mix(color, ink, max(bezel, max(handle, max(outerRim, innerRim))));
+  vec2 side = vec2(-grip.y, grip.x);
+  float along = dot(q, grip);
+  float across = abs(dot(q, side));
+  float handle = smoothstep(outerR - 0.026 * unit, outerR - 0.006 * unit, along)
+    * (1.0 - smoothstep(outerR + 0.78 * unit, outerR + 0.84 * unit, along))
+    * (1.0 - smoothstep(0.03 * unit, 0.042 * unit, across));
+  float collar = smoothstep(outerR - 0.024 * unit, outerR - 0.006 * unit, along)
+    * (1.0 - smoothstep(outerR + 0.04 * unit, outerR + 0.06 * unit, along))
+    * (1.0 - smoothstep(0.048 * unit, 0.06 * unit, across));
+  color = mix(color, ink, max(bezel, max(max(handle, collar), max(outerRim, innerRim))));
 
   gl_FragColor = vec4(color, 1.0);
 }

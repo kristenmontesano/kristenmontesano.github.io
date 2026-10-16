@@ -16,10 +16,29 @@ function ExternalLink({
   );
 }
 
+function emphasize(text: string, keyPrefix: number) {
+  const pattern = /\*([^*\n]+)\*/g;
+  if (!pattern.test(text)) return text;
+  pattern.lastIndex = 0;
+
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  let match: RegExpExecArray | null;
+  let count = 0;
+  while ((match = pattern.exec(text))) {
+    if (match.index > last) nodes.push(text.slice(last, match.index));
+    nodes.push(<em key={`${keyPrefix}-${count}`}>{match[1]}</em>);
+    last = pattern.lastIndex;
+    count += 1;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
+
 function RichText({ parts }: { parts: TextPart[] }) {
   return parts.map((part, index) =>
     typeof part === "string" ? (
-      part
+      emphasize(part, index)
     ) : (
       <ExternalLink key={`${part.href}-${index}`} href={part.href}>
         {part.text}

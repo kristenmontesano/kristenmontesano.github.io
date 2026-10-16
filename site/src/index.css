@@ -359,7 +359,7 @@ nav a[aria-current="page"] {
 }
 
 .sheet {
-  max-width: 42rem;
+  max-width: 52rem;
   margin: 0 auto;
   padding: 1.5rem 1.4rem 2.25rem;
   background: var(--paper);
@@ -474,6 +474,10 @@ nav a[aria-current="page"] {
 .post-body {
   font-size: 1.125rem;
   line-height: 1.7;
+}
+
+.post-body em {
+  font-style: italic;
 }
 
 .post-body p {

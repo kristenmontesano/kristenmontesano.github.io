@@ -119,7 +119,7 @@ function layoutBlock(
   topInset: number,
 ): BlockLayout {
   const lensDiameter = height * 0.784 * scale;
-  const maxWidth = width < 720 ? width * 0.82 : width * 0.76;
+  const maxWidth = width < 720 ? width * 0.82 : width * 0.65;
   let fontSize = Math.min(height * 0.088, width * 0.105, lensDiameter * 0.42);
 
   const applyFont = (size: number) => {
@@ -368,7 +368,8 @@ export function WebGLCanvas() {
       const scale = glassScale(canvas.clientWidth, canvas.clientHeight);
       const header = document.querySelector(".site-header");
       const insetCss = header?.getBoundingClientRect().height ?? 0;
-      const topInset = insetCss * (canvas.height / Math.max(canvas.clientHeight, 1));
+      const topInset =
+        insetCss * (canvas.height / Math.max(canvas.clientHeight, 1));
       const layout = paintTextures(
         noiseCanvas,
         messageCanvas,
@@ -435,8 +436,7 @@ export function WebGLCanvas() {
     const overChrome = (event: Event) => {
       const target = event.target;
       return (
-        target instanceof Element &&
-        Boolean(target.closest(".site-header"))
+        target instanceof Element && Boolean(target.closest(".site-header"))
       );
     };
 
@@ -510,7 +510,8 @@ export function WebGLCanvas() {
         const y = rect.top + (1 - galaxy.y) * rect.height;
         const lift = GLASS_OUTER * scale * rect.height + 12;
         const headerBottom =
-          document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
+          document.querySelector(".site-header")?.getBoundingClientRect()
+            .bottom ?? 0;
         const hintTop = Math.max(headerBottom + 6, y - lift);
         hint.style.transform = `translate(${x}px, ${hintTop}px) translate(-50%, -100%)`;
       }

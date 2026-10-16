@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths-ignore:
       - "assets/**"
+      - "images/**"
       - "index.html"
       - "favicon.svg"
       - "404.html"

@@ -8,7 +8,7 @@ const shot = (file: string) => `/images/${encodeURIComponent(file)}`;
 export const favoriteGames2026: Post = {
   slug: "favorite-games-2026",
   category: "games",
-  title: "Intro and favorite games played this year",
+  title: "Intro and Favorite Games Played in 2026",
   date: "2026-10-15",
   summary: "A first list of my favorite games played this year.",
   blocks: [
@@ -21,7 +21,7 @@ export const favoriteGames2026: Post = {
     {
       type: "paragraph",
       text: [
-        "Lately, I've been playing a lot of wonderful games and reading a lot of fantastic books. With a new pocket of free time in my life, I figured it was a good opportunity to sit down and write about what makes my favorites so special. As someone who works in a creative field, I think there's a lot to gain from going beyond just intuiting what makes something special, and actually thinking deeply and putting into words why something works so well.",
+        "Lately, I've been playing a lot of wonderful games and reading a lot of fantastic books. With a new pocket of free time in my life, I figured it was a good opportunity to sit down and write about what makes my favorites so special. As someone who works in a creative field, I think there's a lot to gain from going beyond just *intuiting* what makes something special, and actually thinking deeply and putting into words why something works so well.",
       ],
     },
     {
@@ -31,7 +31,7 @@ export const favoriteGames2026: Post = {
     {
       type: "paragraph",
       text: [
-        "I’m letting myself off easy with this first writing, just to get the ball rolling, since I’d need to review and plan out which games I want to write more about. Of the games I played in 2026, here is a list of my favorites. Hopefully I’ll be writing a bit on each of these!",
+        "I’m letting myself off easy with this first writing, just to get the ball rolling, since I’d need to review and plan out which games I want to write more about. Of the games I played in 2026, here is a list of my favorites. I anticipate writing a more in-depth review on most of these!",
       ],
     },
     {
@@ -70,7 +70,7 @@ export const favoriteGames2026: Post = {
         },
       ],
       text: [
-        "A very American western game in which you play as a gunslinging, horse riding Arthur Morgan in a gang of outlaws. Robbing trains has never been more fun! I’m not the biggest fan of open world games, but this one really hit for me. It’s everything you want from a studio as big as Rockstar, and they delivered.",
+        "A very American western game in which you play as a gunslinging, horse riding Arthur Morgan in a gang of outlaws. Robbing trains has never been more fun! I’m not the biggest fan of open world games, but this one *really* hit for me. It’s everything you want from a studio as big as Rockstar, and they delivered.",
       ],
       image: {
         src: shot("Red Dead Redemption II.png"),
@@ -120,7 +120,7 @@ export const favoriteGames2026: Post = {
           text: "Slay the Spire",
           href: steam("646570", "Slay_the_Spire"),
         },
-        " with barely any changes, but why fix what ain’t broken, right? I spent an inexplicable number of hours on this sequel especially given the minimal differences from the original. Much like ",
+        " with hardly any changes beyond new content, but why fix what ain’t broken, right? I spent an inexplicable number of hours on this sequel especially given the minimal differences from the original. Much like ",
         {
           text: "Hades II",
           href: steam("1145350", "Hades_II"),
@@ -158,7 +158,7 @@ export const favoriteGames2026: Post = {
           text: "Into the Breach",
           href: steam("590380", "Into_the_Breach"),
         },
-        " was a deckbuilder with an open world it would be this. Made me bash my head into the wall many times. Just one more attempt and I’ll get it… Also, gorgeous pixel art, which I am a sucker for. That’s 5 stars for me!",
+        " was a deckbuilder with an open world it would be this. Made me bash my head into the wall many times. Just one more attempt and I’ll get it… Also, *gorgeous* pixel art, which I am a sucker for. That’s 5 stars for me!",
       ],
       image: {
         src: shot("Death Howl.png"),
