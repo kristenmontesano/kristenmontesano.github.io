@@ -19,7 +19,7 @@ uniform float u_fit;
 
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution;
-  vec3 paper = vec3(243.0, 242.0, 239.0) / 255.0;
+  vec3 paper = vec3(226.0, 223.0, 214.0) / 255.0;
   vec3 ink = vec3(22.0, 19.0, 17.0) / 255.0;
   vec3 color = paper;
   vec2 p = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
@@ -35,13 +35,14 @@ void main() {
   }
 
   float spacing = 20.0 * u_dpr;
-  vec2 cell = floor(gl_FragCoord.xy / spacing);
+  vec2 fromTop = vec2(gl_FragCoord.x, u_resolution.y - gl_FragCoord.y);
+  vec2 cell = floor(fromTop / spacing);
   vec2 center = (cell + 0.5) * spacing;
-  float gap = length(gl_FragCoord.xy - center);
-  float dotRadius = max(u_dpr * 1.05, 0.8);
-  float mark = 1.0 - smoothstep(dotRadius * 0.15, dotRadius, gap);
+  float gap = length(fromTop - center);
+  float mark = 1.0 - smoothstep(0.75 * u_dpr, 1.3 * u_dpr, gap);
   float page = 1.0 - lens;
-  color = mix(color, ink, mark * page);
+  vec3 pink = vec3(1.0, 0.0, 0.8157);
+  color = mix(color, pink, mark * page);
 
   vec4 title = texture2D(u_title, vec2(uv.x, 1.0 - uv.y));
   color = mix(color, title.rgb, title.a * page);
@@ -209,7 +210,7 @@ function paintCollage(
     h: box.h,
     tilt: COVER_TILT[index % COVER_TILT.length],
   }));
-  context.fillStyle = "#f3f2ef";
+  context.fillStyle = "#e2dfd6";
   context.fillRect(0, 0, target.width, target.height);
   const placed = shuffledCovers(images).map((item, index) => {
     const box = boxes[index];
