@@ -15,7 +15,7 @@ export const favoriteGames2026: Post = {
     {
       type: "paragraph",
       text: [
-        "I'm Kristen Vassalli, and I love games and books, among other things. I've been making games professionally since 2021, but I've been playing them obsessively since 2005, when my grandma heard that the Game Boy Advance SP was all the rage and sent me one (thanks, Grandma!).",
+        "I'm Kristen Vassalli, and I love games and books, among other things. I've had a career in designing and developing games since 2021, but I've been playing them obsessively since 2005, when my grandma heard that the Game Boy Advance SP was all the rage and sent me one (thanks, Grandma!).",
       ],
     },
     {
@@ -46,7 +46,7 @@ export const favoriteGames2026: Post = {
         },
       ],
       text: [
-        "Probably my favorite of the year. A time-management story game with some of the best thematic minigames that tie the story and gameplay together so well. This game really makes you feel what the creators wanted you to feel, through the gameplay. Mini games are stressful when our character is stressed, hard to control when she’s distracted, and so on. I anticipate I’ll write up a longer review on this one first. Delightful.",
+        "Probably my favorite of the year. A time-management story game with some of the best thematic minigames that tie the story and gameplay together so well. This game really makes you feel what the creators wanted you to feel, through the gameplay. Mini games are stressful when our character is stressed, hard to control when she’s distracted, and so on. In one of my favorites, a study minigame, our character Jenny's head is literally spinning as she tries to focus on her book and you are given clunky controls to try to keep her head facing towards the book, while avoiding letting her look at distractions that fly in from random directions. I anticipate I’ll write up a longer review on this one first. Delightful.",
       ],
       image: {
         src: shot("Consume Me.png"),
@@ -96,7 +96,7 @@ export const favoriteGames2026: Post = {
         { name: "Epic" },
       ],
       text: [
-        "How’s your bucket list looking? Good thing you’ve got a lot more time to achieve your goals than fly. A delightful little puzzle-discovery roguelike. Figure out what cleverly-named bucket list items really mean (“Just Roll with It?” What do I do for that one? Spoiler: You land on a toilet paper roll and walk it like a treadmill) and then cross off all of the items on the list in one 80-second lifespan run! Short games can be amazing. In fact, I’m particularly drawn to them.",
+        "How’s your bucket list looking? Good thing you’ve got a lot more time to achieve your goals than a fly, for whom a lifetime tops out around 80 seconds. In this delightful little puzzle-discovery roguelike, you experience life as a fly, zooming around areas in a black-and-white pixel art world. Figure out what cleverly-named bucket list items really mean (“Just Roll with It”? What do I do for that one? Spoiler: You land on a toilet paper roll and walk it like a treadmill until the roll is emptied), which will take you a few tries given the very short time you get. Once you know what each puzzle means, start a new run so you can race to cross off all of the items on the list in your limited 80-second lifespan! This game only takes an hour or two to complete, but short games can be amazing. In fact, I’m particularly drawn to them.",
       ],
       image: {
         src: shot("Time Flies.png"),
@@ -153,12 +153,12 @@ export const favoriteGames2026: Post = {
         },
       ],
       text: [
-        "I like hard games that make you try over and over again to beat the level, and this is that. If ",
+        "I like hard games that make you try over and over again to beat a single level or area, and this game is the epitome of that. If ",
         {
           text: "Into the Breach",
           href: steam("590380", "Into_the_Breach"),
         },
-        " was a deckbuilder with an open world it would be this. Made me bash my head into the wall many times. Just one more attempt and I’ll get it… Also, *gorgeous* pixel art, which I am a sucker for. That’s 5 stars for me!",
+        " was also a deckbuilder with an open world, you'd have Death Howl. And Into the Breach is not an easy game already! Made me bash my head into the wall many times. Just one more attempt and I’ll get it… Also, *gorgeous* pixel art, which I am a sucker for. That’s 5 stars for me!",
       ],
       image: {
         src: shot("Death Howl.png"),
