@@ -19,7 +19,7 @@ uniform float u_hasImage;
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution;
   vec2 sampleUv = vec2(uv.x, 1.0 - uv.y);
-  vec3 paper = vec3(226.0, 224.0, 217.0) / 255.0;
+  vec3 paper = vec3(230.0, 228.0, 221.0) / 255.0;
   vec3 color = paper;
   if (u_hasImage > 0.5) color = texture2D(u_noise, sampleUv).rgb;
 
@@ -63,7 +63,7 @@ const COPY =
 
 const FOCUS_WORD = "KRISTEN";
 
-const PAPER = "#e2e0d9";
+const PAPER = "#e6e4dd";
 const LENS = "#ff1208";
 const INK = "#2a1012";
 
