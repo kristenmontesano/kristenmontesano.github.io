@@ -69,7 +69,7 @@ void main() {
 }
 `;
 
-const covers = [
+const covers: { id: string; title: string; src?: string }[] = [
   { id: "1174180", title: "Red Dead Redemption 2" },
   { id: "2000120", title: "Time Flies" },
   { id: "2366980", title: "Thank Goodness You're Here!" },
@@ -77,6 +77,11 @@ const covers = [
   { id: "1102130", title: "Florence" },
   { id: "2359120", title: "Consume Me" },
   { id: "1593030", title: "Terra Nil" },
+  {
+    id: "2364580",
+    title: "Titanium Court",
+    src: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2364580/ec1d62906afd236b57d69e2cf24bd4b80a08ffeb/library_capsule_2x.jpg",
+  },
 ];
 
 function steamUrl(id: string) {
@@ -354,6 +359,8 @@ function compileShader(
 
 const GLASS_RADIUS = 0.32;
 const HINT_DELAY = 5000;
+// Fraction of the glass radius. Puts the lens center above the thumb.
+const TOUCH_LIFT = 0.46;
 
 function glassFit(cssWidth: number, cssHeight: number) {
   const radius = GLASS_RADIUS * cssHeight;
@@ -525,7 +532,7 @@ export function GamesCanvas() {
         loaded[index] = { id: cover.id, image };
         uploadCollage();
       };
-      image.src = coverSrc(cover.id);
+      image.src = cover.src ?? coverSrc(cover.id);
     });
     document.fonts.load("800 64px Syne").then(() => uploadTitle());
     document.fonts.load("600 64px Caveat").then(() => uploadCollage());
@@ -672,10 +679,12 @@ export function GamesCanvas() {
     const draw = () => {
       if (!running) return;
       resize();
+      const fit = glassFit(canvas.clientWidth, canvas.clientHeight);
       if (pointer.x >= 0) {
         if (touchDrag && dragging) {
+          const lift = GLASS_RADIUS * fit * TOUCH_LIFT;
           galaxy.x = pointer.x;
-          galaxy.y = pointer.y;
+          galaxy.y = Math.min(pointer.y + lift, 1);
         } else if (!touchDrag) {
           galaxy.x += (pointer.x - galaxy.x) * 0.04;
           galaxy.y += (pointer.y - galaxy.y) * 0.04;
@@ -685,7 +694,6 @@ export function GamesCanvas() {
       gl.uniform2f(galaxyLoc, galaxy.x, galaxy.y);
       gl.uniform1f(dprLoc, pixelRatio());
       gl.uniform1f(hasImageLoc, hasImage);
-      const fit = glassFit(canvas.clientWidth, canvas.clientHeight);
       gl.uniform1f(fitLoc, fit);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       if (!touchDrag && lastClientX >= 0) {

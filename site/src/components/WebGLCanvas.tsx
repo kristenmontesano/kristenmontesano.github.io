@@ -285,6 +285,8 @@ function makeTexture(gl: WebGLRenderingContext) {
 
 const GLASS_OUTER = 0.42;
 const HINT_DELAY = 5000;
+// Fraction of the glass radius. Puts the lens center above the thumb.
+const TOUCH_LIFT = 0.4;
 
 export function WebGLCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -490,8 +492,9 @@ export function WebGLCanvas() {
       const scale = glassScale(canvas.clientWidth, canvas.clientHeight);
       if (pointer.x >= 0) {
         if (touchDrag && dragging) {
+          const lift = GLASS_OUTER * scale * TOUCH_LIFT;
           galaxy.x = pointer.x;
-          galaxy.y = pointer.y;
+          galaxy.y = Math.min(pointer.y + lift, 1);
         } else if (!touchDrag) {
           galaxy.x += (pointer.x - galaxy.x) * 0.08;
           galaxy.y += (pointer.y - galaxy.y) * 0.08;
