@@ -76,6 +76,9 @@ const NOISE_LAYERS = [
   { color: "#ff00d0", dx: 0.18, dy: 0.78, shift: 2 },
 ];
 
+// The readable plate. The lens text is drawn on this blue copy.
+const ALIGNED = NOISE_LAYERS[0];
+
 type BlockLayout = {
   fontSize: number;
   lineHeight: number;
@@ -239,7 +242,13 @@ function paintTextures(
   messageContext.textBaseline = "middle";
   messageContext.filter = `blur(${Math.max(0.6, layout.fontSize * 0.012)}px)`;
   messageContext.fillStyle = INK;
-  drawLines(messageContext, layout, 0, 0, 0);
+  drawLines(
+    messageContext,
+    layout,
+    ALIGNED.dx * layout.fontSize,
+    ALIGNED.dy * layout.fontSize,
+    ALIGNED.shift,
+  );
   messageContext.filter = "none";
 
   return layout;
@@ -403,8 +412,12 @@ export function WebGLCanvas() {
       );
       hasImage = 1;
       if (pointer.x < 0) {
-        const y = layout.firstCenterY + layout.focusIndex * layout.lineHeight;
-        galaxy.x = 0.5;
+        const x = layout.centerX + ALIGNED.dx * layout.fontSize;
+        const y =
+          layout.firstCenterY +
+          layout.focusIndex * layout.lineHeight +
+          ALIGNED.dy * layout.fontSize;
+        galaxy.x = x / canvas.width;
         galaxy.y = 1 - y / canvas.height;
       }
     };
