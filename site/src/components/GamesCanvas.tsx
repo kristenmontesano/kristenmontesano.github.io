@@ -82,6 +82,7 @@ const covers: { id: string; title: string; src?: string }[] = [
     title: "Titanium Court",
     src: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2364580/ec1d62906afd236b57d69e2cf24bd4b80a08ffeb/library_capsule_2x.jpg",
   },
+  { id: "414340", title: "Hellblade: Senua's Sacrifice" },
 ];
 
 function steamUrl(id: string) {
