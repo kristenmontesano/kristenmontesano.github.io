@@ -74,9 +74,8 @@ const covers: { id: string; title: string; src?: string }[] = [
   { id: "2000120", title: "Time Flies" },
   { id: "2366980", title: "Thank Goodness You're Here!" },
   { id: "1456880", title: "ElecHead" },
-  { id: "1102130", title: "Florence" },
+  { id: "1663850", title: "Replaced" },
   { id: "2359120", title: "Consume Me" },
-  { id: "1593030", title: "Terra Nil" },
   {
     id: "2364580",
     title: "Titanium Court",
