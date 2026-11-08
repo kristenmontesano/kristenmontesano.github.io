@@ -218,7 +218,7 @@ function paintCollage(
     h: box.h,
     tilt: COVER_TILT[index % COVER_TILT.length],
   }));
-  context.fillStyle = "#e2dfd6";
+  context.fillStyle = "#eceae3";
   context.fillRect(0, 0, target.width, target.height);
   const placed = shuffledCovers(images).map((item, index) => {
     const box = boxes[index];
@@ -278,7 +278,7 @@ function drawTapedTitle(
   context.shadowColor = "rgba(0, 0, 0, 0.32)";
   context.shadowBlur = fontSize * 0.35;
   context.shadowOffsetY = fontSize * 0.12;
-  context.fillStyle = "#f3ecdf";
+  context.fillStyle = "#f7f2e8";
   context.beginPath();
   context.roundRect(-paperW / 2, -paperH / 2, paperW, paperH, fontSize * 0.08);
   context.fill();

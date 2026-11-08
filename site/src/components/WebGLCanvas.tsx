@@ -63,7 +63,7 @@ const COPY =
 
 const FOCUS_WORD = "KRISTEN";
 
-const PAPER = "#e6e4dd";
+const PAPER = "#f0eee8";
 const LENS = "#ff1208";
 const INK = "#2a1012";
 

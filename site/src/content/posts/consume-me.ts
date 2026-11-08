@@ -8,7 +8,7 @@ const shot = (file: string) => `/images/${encodeURIComponent(file)}`;
 export const consumeMe: Post = {
   slug: "consume-me",
   category: "games",
-  title: "Consume Me: A Charming Time Management, Minigame-Rich Story",
+  title: "Consume Me Review",
   date: "2026-11-08",
   summary:
     "A short, tightly crafted story game where time management and cute minigames make you feel the stresses and joys our character feels, while also making you complicit in their unhealthy habits.",
@@ -93,7 +93,7 @@ export const consumeMe: Post = {
     {
       type: "paragraph",
       text: [
-        "In the reading minigame, we play from a top-down view, with Jenny's head constantly rotating. We must try to change its direction (clockwise or counter-clockwise) at the right time and often enough to keep her eyes focused on her books. Distracting thoughts fly in from nowhere, about her crush, her dog, and everything else competing for her attention, and we must avoid looking at them! As part of her dieting minigames, we play a Tetris-inspired game where we must fit the right foods together to keep Jenny both full enough and under her \"bite par.\" To play the workout minigame, we contort her wobbly arms into the right yoga poses to burn \"bites.\" Cleaning the bathroom involves a time-trial minigame with yucky green dirt and a tiny, purposefully loosely controlled scrub brush. They're all silly and fun little games in their own right, but they also make us feel what Jenny is feeling. I found myself stressing, just for a few seconds, over these minigames, trying to make the most of the allotted time to help my overextended character work toward her goals.",
+        'In the reading minigame, we play from a top-down view, with Jenny\'s head constantly rotating. We must try to change its direction (clockwise or counter-clockwise) at the right time and often enough to keep her eyes focused on her books. Distracting thoughts fly in from nowhere, about her crush, her dog, and everything else competing for her attention, and we must avoid looking at them! As part of her dieting minigames, we play a Tetris-inspired game where we must fit the right foods together to keep Jenny both full enough and under her "bite par." To play the workout minigame, we contort her wobbly arms into the right yoga poses to burn "bites." Cleaning the bathroom involves a time-trial minigame with yucky green dirt and a tiny, purposefully loosely controlled scrub brush. They\'re all silly and fun little games in their own right, but they also make us feel what Jenny is feeling. I found myself stressing, just for a few seconds, over these minigames, trying to make the most of the allotted time to help my overextended character work toward her goals.',
       ],
     },
     {

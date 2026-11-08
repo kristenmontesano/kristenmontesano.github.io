@@ -1,9 +1,9 @@
 :root {
   color-scheme: light;
   --ink: #161311;
-  --paper: #f3f2ef;
-  --field: #e6e4dd;
-  --field-warm: #e2dfd6;
+  --paper: #f8f7f5;
+  --field: #f0eee8;
+  --field-warm: #eceae3;
   --dot-pink: #ff00d0;
   --muted: #4e4944;
   --line: rgba(22, 19, 17, 0.1);
