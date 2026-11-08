@@ -122,7 +122,9 @@ function layoutBlock(
   topInset: number,
 ): BlockLayout {
   const lensDiameter = height * 0.784 * scale;
-  const maxWidth = width < 720 ? width * 0.82 : width * 0.65;
+  // Desktop: keep a short measure so lines stack instead of spanning the screen.
+  const maxWidth =
+    width < 720 ? width * 0.82 : Math.min(width * 0.55, height * 0.62);
   let fontSize = Math.min(height * 0.088, width * 0.105, lensDiameter * 0.42);
 
   const applyFont = (size: number) => {

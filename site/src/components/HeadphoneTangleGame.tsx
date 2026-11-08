@@ -5,6 +5,7 @@ import {
   POCKET,
   WORLD_H,
   WORLD_W,
+  scoreTangles,
   starsFor,
   type CordPoint,
 } from "./headphoneTangleSim";
@@ -35,6 +36,32 @@ type Api = { start: () => void; resize: () => void };
 
 type Pop = { x: number; y: number; born: number };
 
+type Speech = {
+  text: string;
+  /** 0 = left bud, 1 = right bud */
+  bud: 0 | 1;
+  born: number;
+};
+
+const SPEECH_MS = 2200;
+const SPEECH_COOLDOWN_MS = 3000;
+
+const SPEECH_LINES = [
+  "cozy!",
+  "snuggly!",
+  "I've never felt closer to you!",
+  "more please!",
+  "knots galore!",
+  "we're like a pretzel!",
+  "don't stop!",
+  "perfect mess!",
+  "so tangled!",
+  "hug tighter!",
+  "best friends forever!",
+  "mmm, chaos!",
+  "inextricable!",
+];
+
 const STAR_LINES = [
   "",
   "Suspiciously neat. Did you even try?",
@@ -44,7 +71,13 @@ const STAR_LINES = [
   "Legendary pocket chaos.",
 ];
 
-function polyline(p: p5, pts: CordPoint[], chain: number[], from: number, to: number) {
+function polyline(
+  p: p5,
+  pts: CordPoint[],
+  chain: number[],
+  from: number,
+  to: number,
+) {
   const lo = Math.max(0, from);
   const hi = Math.min(chain.length - 1, to);
   if (hi <= lo) return;
@@ -53,7 +86,13 @@ function polyline(p: p5, pts: CordPoint[], chain: number[], from: number, to: nu
   p.endShape();
 }
 
-function strand(p: p5, pts: CordPoint[], chain: number[], from: number, to: number) {
+function strand(
+  p: p5,
+  pts: CordPoint[],
+  chain: number[],
+  from: number,
+  to: number,
+) {
   p.stroke(C.cordEdge);
   p.strokeWeight(10);
   polyline(p, pts, chain, from, to);
@@ -78,7 +117,16 @@ function drawPocket(p: p5) {
   p.stroke(C.stitch);
   p.strokeWeight(3);
   p.line(x + 40, y + hem - 11, x + w - 40, y + hem - 11);
-  p.rect(x + 12, y + hem + 22, w - 24, h - hem - 34, 6, 6, rBottom - 12, rBottom - 12);
+  p.rect(
+    x + 12,
+    y + hem + 22,
+    w - 24,
+    h - hem - 34,
+    6,
+    6,
+    rBottom - 12,
+    rBottom - 12,
+  );
   ctx.setLineDash([]);
 
   p.noStroke();
@@ -243,6 +291,55 @@ function drawPops(p: p5, pops: Pop[], now: number) {
   }
 }
 
+function drawSpeechBubbles(
+  p: p5,
+  sim: HeadphoneSim,
+  speeches: Speech[],
+  now: number,
+) {
+  p.textFont("Outfit");
+  p.textStyle(p.NORMAL);
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textSize(13);
+
+  for (const speech of speeches) {
+    const age = now - speech.born;
+    const fadeIn = Math.min(1, age / 140);
+    const fadeOut = Math.min(1, (SPEECH_MS - age) / 280);
+    const alpha = Math.max(0, Math.min(fadeIn, fadeOut)) * 255;
+    if (alpha <= 0) continue;
+
+    const end =
+      sim.points[sim.chains[speech.bud][sim.chains[speech.bud].length - 1]];
+    const tw = Math.min(168, Math.max(54, p.textWidth(speech.text) + 22));
+    const th = 28;
+    let bx = end.x;
+    let by = end.y - 42;
+    // Keep the bubble inside the pocket, and nudge left/right so both buds can talk.
+    bx = Math.min(
+      POCKET.x + POCKET.w - tw / 2 - 10,
+      Math.max(POCKET.x + tw / 2 + 10, bx),
+    );
+    by = Math.max(POCKET.y + POCKET.hem + th / 2 + 8, by);
+    if (speech.bud === 0) bx = Math.min(bx, end.x + 8);
+    else bx = Math.max(bx, end.x - 8);
+
+    const pop = 1 + (1 - fadeIn) * 0.12;
+    p.push();
+    p.translate(bx, by);
+    p.scale(pop);
+
+    p.noStroke();
+    p.fill(255, 248, 240, alpha);
+    p.rect(-tw / 2, -th / 2, tw, th, 14);
+    // Little pointer toward the bud.
+    p.triangle(-6, th / 2 - 1, 6, th / 2 - 1, 0, th / 2 + 9);
+    p.fill(43, 29, 34, alpha);
+    p.text(speech.text, 0, -1);
+    p.pop();
+  }
+}
+
 function makeSketch(
   host: HTMLDivElement,
   barRef: { current: HTMLDivElement | null },
@@ -256,8 +353,13 @@ function makeSketch(
     let elapsed = 0;
     let acc = 0;
     let finalTangles = 0;
+    let scored = 0;
     let pops: Pop[] = [];
+    let speeches: Speech[] = [];
     let lastPop = 0;
+    let lastSpeech = -SPEECH_COOLDOWN_MS;
+    let lastSpeechLine = -1;
+    let nextSpeechBud: 0 | 1 = 0;
     let ready = false;
     let still = false;
     let canvasEl: HTMLCanvasElement | null = null;
@@ -265,7 +367,7 @@ function makeSketch(
 
     const publish = () => {
       const secs = Math.max(0, Math.ceil(ROUND_SECONDS - elapsed));
-      const tangles = mode === "done" ? finalTangles : sim.tangles;
+      const tangles = mode === "done" ? finalTangles : scored;
       const stars = mode === "done" ? starsFor(finalTangles) : 0;
       const key = `${mode}|${secs}|${tangles}`;
       if (key === lastKey) return;
@@ -274,12 +376,38 @@ function makeSketch(
     };
 
     const setTouchAction = () => {
-      if (canvasEl) canvasEl.style.touchAction = mode === "playing" ? "none" : "pan-y";
+      if (canvasEl)
+        canvasEl.style.touchAction = mode === "playing" ? "none" : "pan-y";
+    };
+
+    const saySomething = (now: number) => {
+      if (now - lastSpeech < SPEECH_COOLDOWN_MS) return;
+      let pick = Math.floor(Math.random() * SPEECH_LINES.length);
+      if (SPEECH_LINES.length > 1 && pick === lastSpeechLine) {
+        pick =
+          (pick + 1 + Math.floor(Math.random() * (SPEECH_LINES.length - 1))) %
+          SPEECH_LINES.length;
+      }
+      lastSpeechLine = pick;
+      lastSpeech = now;
+      speeches = [
+        {
+          text: SPEECH_LINES[pick],
+          bud: nextSpeechBud,
+          born: now,
+        },
+      ];
+      nextSpeechBud = nextSpeechBud === 0 ? 1 : 0;
     };
 
     const start = () => {
       sim.reset();
       pops = [];
+      speeches = [];
+      scored = 0;
+      lastSpeech = -SPEECH_COOLDOWN_MS;
+      lastSpeechLine = -1;
+      nextSpeechBud = Math.random() < 0.5 ? 0 : 1;
       elapsed = 0;
       acc = 0;
       mode = "playing";
@@ -289,7 +417,8 @@ function makeSketch(
 
     const finish = () => {
       sim.releaseAll();
-      finalTangles = sim.tangles;
+      scored = scoreTangles(sim);
+      finalTangles = scored;
       mode = "done";
       if (canvasEl) canvasEl.style.cursor = "";
       setTouchAction();
@@ -306,7 +435,8 @@ function makeSketch(
       resize: () => {
         if (!ready) return;
         const { width, height } = sizeForHost();
-        if (width !== p.width || height !== p.height) p.resizeCanvas(width, height);
+        if (width !== p.width || height !== p.height)
+          p.resizeCanvas(width, height);
       },
     };
     apiRef.current = api;
@@ -383,26 +513,37 @@ function makeSketch(
       let steps = 0;
       while (acc >= STEP_MS && steps < 4) {
         sim.step(mode === "playing");
-        if (mode === "playing" && sim.fresh.length && now - lastPop > 90) {
-          const f = sim.fresh[0];
-          pops.push({ x: f.x, y: f.y, born: now });
-          lastPop = now;
+        if (mode === "playing") {
+          const next = scoreTangles(sim);
+          if (next > scored && sim.fresh.length && now - lastPop > 90) {
+            const f = sim.fresh[0];
+            pops.push({ x: f.x, y: f.y, born: now });
+            lastPop = now;
+            saySomething(now);
+          }
+          scored = next;
         }
         acc -= STEP_MS;
         steps += 1;
       }
       if (steps === 4) acc = 0;
       pops = pops.filter((pop) => now - pop.born < 650);
+      speeches = speeches.filter((s) => now - s.born < SPEECH_MS);
 
       if (mode === "playing") publish();
       const bar = barRef.current;
       if (bar) {
-        const left = mode === "playing" ? 1 - elapsed / ROUND_SECONDS : mode === "ready" ? 1 : 0;
+        const left =
+          mode === "playing"
+            ? 1 - elapsed / ROUND_SECONDS
+            : mode === "ready"
+              ? 1
+              : 0;
         bar.style.transform = `scaleX(${Math.max(0, left)})`;
       }
 
-      const tangles = mode === "done" ? finalTangles : sim.tangles;
-      const mood = tangles >= 10 ? 2 : tangles >= 3 ? 1 : 0;
+      const tangles = mode === "done" ? finalTangles : scored;
+      const mood = tangles >= 14 ? 2 : tangles >= 5 ? 1 : 0;
       const held = sim.grabbed();
       const isHeld = (kind: CordPoint["kind"]) =>
         [...held].some((i) => sim.points[i].kind === kind);
@@ -416,7 +557,10 @@ function makeSketch(
       drawJack(p, sim, isHeld("jack"));
       drawBud(p, sim, 0, C.orange, isHeld("budL"), mood);
       drawBud(p, sim, 1, C.yellow, isHeld("budR"), mood);
-      if (!still) drawPops(p, pops, now);
+      if (!still) {
+        drawPops(p, pops, now);
+        drawSpeechBubbles(p, sim, speeches, now);
+      }
       p.pop();
     };
 
@@ -469,7 +613,9 @@ export function HeadphoneTangleGame() {
           <span className="tangle-pill tangle-count">
             {hud.tangles} {hud.tangles === 1 ? "tangle" : "tangles"}
           </span>
-          <span className={`tangle-pill tangle-time${hurry ? " is-hurry" : ""}`}>
+          <span
+            className={`tangle-pill tangle-time${hurry ? " is-hurry" : ""}`}
+          >
             {hud.secs}s
           </span>
         </div>
@@ -484,8 +630,8 @@ export function HeadphoneTangleGame() {
                 <p className="tangle-card-title">Tangle your headphones</p>
                 <p className="tangle-card-copy">
                   Drag the earbuds, the jack, or any bit of cord. Whatever
-                  you’re holding goes over. Make as many crossings as you can
-                  in 20 seconds.
+                  you’re holding goes over. Make as many crossings as you can in
+                  20 seconds.
                 </p>
                 <button
                   type="button"
@@ -500,9 +646,16 @@ export function HeadphoneTangleGame() {
         </div>
         {hud.mode === "done" ? (
           <div className="tangle-result" role="status">
-            <p className="tangle-stars" aria-label={`${hud.stars} out of 5 stars`}>
+            <p
+              className="tangle-stars"
+              aria-label={`${hud.stars} out of 5 stars`}
+            >
               {[1, 2, 3, 4, 5].map((n) => (
-                <span key={n} className={n <= hud.stars ? "is-on" : undefined} aria-hidden="true">
+                <span
+                  key={n}
+                  className={n <= hud.stars ? "is-on" : undefined}
+                  aria-hidden="true"
+                >
                   ★
                 </span>
               ))}

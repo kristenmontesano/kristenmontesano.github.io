@@ -24,13 +24,50 @@ const MAX_DRAG_STEP = 22;
 const MAX_STRETCH = 1.25;
 const GHOST_STEPS = 12;
 
-/** Tangles needed for 2★, 3★, 4★, and 5★. */
-export const STAR_STEPS = [8, 15, 30, 50];
+/**
+ * Soft caps for scored tangles (not raw crossings).
+ * Spinning one bud around the stem mostly fills a single pairing, so it
+ * plateaus; weaving both buds + the jack is what pushes the score up.
+ */
+const SAME_CHAIN_CAP = 2;
+const PAIR_FULL = 5;
+const PAIR_HALF = 4;
+
+/** Tangles needed for 2★, 3★, 4★, and 5★ (tuned to the capped score). */
+export const STAR_STEPS = [5, 10, 16, 22];
 
 export function starsFor(tangles: number) {
   let stars = 1;
   for (const need of STAR_STEPS) if (tangles >= need) stars += 1;
   return stars;
+}
+
+/** Score from crossings with soft caps per chain pairing — anti-spin cheese. */
+export function scoreTangles(sim: {
+  crossings: Crossing[];
+  segments: Segment[];
+}) {
+  const counts = new Map<string, number>();
+  for (const c of sim.crossings) {
+    const a = sim.segments[c.over].chain;
+    const b = sim.segments[c.under].chain;
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    const key = `${lo}:${hi}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  let score = 0;
+  for (const [key, n] of counts) {
+    const [a, b] = key.split(":").map(Number);
+    if (a === b) {
+      score += Math.min(n, SAME_CHAIN_CAP);
+      continue;
+    }
+    const full = Math.min(n, PAIR_FULL);
+    const half = Math.min(Math.max(n - PAIR_FULL, 0), PAIR_HALF);
+    score += full + half * 0.5;
+  }
+  return Math.floor(score);
 }
 
 export type PointKind = "cord" | "split" | "budL" | "budR" | "jack";
