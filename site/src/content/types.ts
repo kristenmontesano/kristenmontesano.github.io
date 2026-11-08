@@ -32,7 +32,14 @@ export type ImageBlock = {
   image: PostImage;
 };
 
-export type Block = ParagraphBlock | GameBlock | ImageBlock;
+export type MinigameId = "headphone-tangling";
+
+export type MinigameBlock = {
+  type: "minigame";
+  id: MinigameId;
+};
+
+export type Block = ParagraphBlock | GameBlock | ImageBlock | MinigameBlock;
 
 export type Post = {
   slug: string;
@@ -40,5 +47,7 @@ export type Post = {
   title: string;
   date: string;
   summary: string;
+  /** Index cue label; defaults to "Read". */
+  actionLabel?: string;
   blocks: Block[];
 };

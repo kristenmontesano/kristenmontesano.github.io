@@ -40,7 +40,7 @@ export function CategoryPage({ category }: { category: CategoryId }) {
                 <time dateTime={post.date}>{formatPostDate(post.date)}</time>
                 <span className="post-index-title">{post.title}</span>
                 <span className="post-index-summary">{post.summary}</span>
-                <span className="read-cue">Read</span>
+                <span className="read-cue">{post.actionLabel ?? "Read"}</span>
               </Link>
             </li>
           ))}

@@ -1,5 +1,9 @@
-import type { ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import type { Block, PostImage, StoreLink, TextPart } from "../content/types";
+
+const HeadphoneTangleGame = lazy(() =>
+  import("./HeadphoneTangleGame").then((m) => ({ default: m.HeadphoneTangleGame })),
+);
 
 function ExternalLink({
   href,
@@ -92,6 +96,15 @@ function PostFigure({ image }: { image: PostImage }) {
   );
 }
 
+function Minigame({ id }: { id: string }) {
+  if (id !== "headphone-tangling") return null;
+  return (
+    <Suspense fallback={<div className="tangle tangle-loading" />}>
+      <HeadphoneTangleGame />
+    </Suspense>
+  );
+}
+
 export function PostBody({ blocks }: { blocks: Block[] }) {
   return (
     <div className="post-body">
@@ -106,6 +119,10 @@ export function PostBody({ blocks }: { blocks: Block[] }) {
 
         if (block.type === "image") {
           return <PostFigure key={index} image={block.image} />;
+        }
+
+        if (block.type === "minigame") {
+          return <Minigame key={`minigame-${block.id}`} id={block.id} />;
         }
 
         return (

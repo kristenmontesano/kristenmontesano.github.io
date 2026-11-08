@@ -19,7 +19,7 @@ uniform float u_fit;
 
 void main() {
   vec2 uv = gl_FragCoord.xy / u_resolution;
-  vec3 paper = vec3(226.0, 223.0, 214.0) / 255.0;
+  vec3 paper = vec3(236.0, 234.0, 227.0) / 255.0;
   vec3 ink = vec3(22.0, 19.0, 17.0) / 255.0;
   vec3 color = paper;
   vec2 p = (uv - 0.5) * vec2(u_resolution.x / u_resolution.y, 1.0);
@@ -69,30 +69,74 @@ void main() {
 }
 `;
 
-const covers: { id: string; title: string; src?: string }[] = [
-  { id: "1174180", title: "Red Dead Redemption 2" },
-  { id: "2000120", title: "Time Flies" },
-  { id: "1456880", title: "ElecHead" },
-  { id: "1663850", title: "Replaced" },
-  {
-    id: "3760370",
-    title: "Kick",
-    src: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3760370/5e0238f29c105ffe87edabb481c24086654a98f7/library_600x900_2x.jpg",
-  },
-  {
-    id: "2364580",
-    title: "Titanium Court",
-    src: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2364580/ec1d62906afd236b57d69e2cf24bd4b80a08ffeb/library_capsule_2x.jpg",
-  },
-  { id: "414340", title: "Hellblade: Senua's Sacrifice" },
-];
+type CoverItem = {
+  id: string;
+  title: string;
+  href: string;
+  src: string;
+  kind: "game" | "book";
+};
 
-function steamUrl(id: string) {
-  return `https://store.steampowered.com/app/${id}/`;
+function gameCover(id: string, title: string, src?: string): CoverItem {
+  return {
+    id,
+    title,
+    href: `https://store.steampowered.com/app/${id}/`,
+    src:
+      src ??
+      `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`,
+    kind: "game",
+  };
 }
 
-function coverSrc(id: string) {
-  return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
+function bookCover(id: string, title: string, href: string, file: string): CoverItem {
+  return {
+    id,
+    title,
+    href,
+    src: `/images/${encodeURIComponent(file)}`,
+    kind: "book",
+  };
+}
+
+const covers: CoverItem[] = [
+  gameCover("1174180", "Red Dead Redemption 2"),
+  gameCover("2000120", "Time Flies"),
+  gameCover("1456880", "ElecHead"),
+  gameCover("1663850", "Replaced"),
+  gameCover(
+    "3760370",
+    "Kick",
+    "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3760370/5e0238f29c105ffe87edabb481c24086654a98f7/library_600x900_2x.jpg",
+  ),
+  gameCover(
+    "2364580",
+    "Titanium Court",
+    "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2364580/ec1d62906afd236b57d69e2cf24bd4b80a08ffeb/library_capsule_2x.jpg",
+  ),
+  gameCover("414340", "Hellblade: Senua's Sacrifice"),
+  bookCover(
+    "book-gentleman-moscow",
+    "A Gentleman in Moscow",
+    "https://www.goodreads.com/book/show/34066798-a-gentleman-in-moscow",
+    "A Gentleman in Moscow.jpg",
+  ),
+  bookCover(
+    "book-midnight-library",
+    "The Midnight Library",
+    "https://www.goodreads.com/book/show/52578297-the-midnight-library",
+    "The Midnight Library.jpg",
+  ),
+  bookCover(
+    "book-tender-hearts",
+    "The Road to Tender Hearts",
+    "https://www.goodreads.com/book/show/218460347-the-road-to-tender-hearts",
+    "The Road to Tender Hearts.jpg",
+  ),
+];
+
+function coverById(id: string) {
+  return covers.find((cover) => cover.id === id);
 }
 
 const COVER_TILT = [-0.09, 0.06, -0.045, 0.08, -0.07, 0.05, -0.035];
@@ -255,19 +299,27 @@ function drawTapedTitle(
   const header = document.querySelector(".site-header");
   const headerPx = header?.getBoundingClientRect().height ?? 4.25 * rootSize;
   const top = headerPx * pixelRatio + rootSize * pixelRatio * 0.35;
-  const text = "What I've been playing lately";
-  let fontSize = Math.min(target.height * 0.07, target.width * 0.055);
+  const lines = [
+    "Games and books I've",
+    "engaged with lately",
+  ];
+  const maxLine = target.width * 0.78;
+  let fontSize = Math.min(target.height * 0.055, target.width * 0.048);
   context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
   while (
-    context.measureText(text).width > target.width * 0.7 &&
-    fontSize > 16 * pixelRatio
+    Math.max(...lines.map((line) => context.measureText(line).width)) >
+      maxLine &&
+    fontSize > 14 * pixelRatio
   ) {
     fontSize *= 0.92;
     context.font = `600 ${fontSize}px Caveat, Fraunces, serif`;
   }
-  const textWidth = context.measureText(text).width;
+  const textWidth = Math.max(
+    ...lines.map((line) => context.measureText(line).width),
+  );
+  const lineGap = fontSize * 1.05;
   const paperW = textWidth + fontSize * 1.35;
-  const paperH = fontSize * 1.7;
+  const paperH = fontSize * 1.15 + lineGap * (lines.length - 1) + fontSize * 0.7;
   const tapeH = fontSize * 0.42;
   const centerX = target.width / 2;
   const centerY = top + tapeH + paperH * 0.62;
@@ -301,7 +353,10 @@ function drawTapedTitle(
   context.fillStyle = "#2a1c24";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText(text, 0, fontSize * 0.06);
+  const textTop = -((lines.length - 1) * lineGap) / 2 + fontSize * 0.04;
+  lines.forEach((line, index) => {
+    context.fillText(line, 0, textTop + index * lineGap);
+  });
   context.restore();
 }
 
@@ -535,7 +590,7 @@ export function GamesCanvas() {
         loaded[index] = { id: cover.id, image };
         uploadCollage();
       };
-      image.src = cover.src ?? coverSrc(cover.id);
+      image.src = cover.src;
     });
     document.fonts.load("800 64px Syne").then(() => uploadTitle());
     document.fonts.load("600 64px Caveat").then(() => uploadCollage());
@@ -670,8 +725,9 @@ export function GamesCanvas() {
       if (touchDrag && !downInLens) return;
       if (!pointInLens(event.clientX, event.clientY)) return;
       const id = coverAt(event.clientX, event.clientY);
-      if (!id) return;
-      window.open(steamUrl(id), "_blank", "noopener,noreferrer");
+      const cover = id ? coverById(id) : null;
+      if (!cover) return;
+      window.open(cover.href, "_blank", "noopener,noreferrer");
     };
 
     const hintTimer = window.setTimeout(() => {
@@ -764,8 +820,9 @@ export function GamesCanvas() {
       <ul className="sr-only">
         {covers.map((cover) => (
           <li key={cover.id}>
-            <a href={steamUrl(cover.id)} target="_blank" rel="noreferrer">
-              {cover.title} on Steam
+            <a href={cover.href} target="_blank" rel="noreferrer">
+              {cover.title}
+              {cover.kind === "game" ? " on Steam" : " on Goodreads"}
             </a>
           </li>
         ))}

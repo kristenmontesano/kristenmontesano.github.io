@@ -1,22 +1,27 @@
 import type { CategoryId, Post } from "./types";
 import { consumeMe } from "./posts/consume-me";
 import { favoriteGames2026 } from "./posts/favorite-games-2026";
+import { headphoneTanglingSimulator } from "./posts/headphone-tangling-simulator";
 
-export const categoryMeta: Record<
-  CategoryId,
-  { title: string; path: string }
-> = {
-  games: { title: "Games", path: "/games" },
-  books: { title: "Books", path: "/books" },
-  other: { title: "Other", path: "/other" },
-};
+export const categoryMeta: Record<CategoryId, { title: string; path: string }> =
+  {
+    games: { title: "Games", path: "/games" },
+    books: { title: "Books", path: "/books" },
+    other: { title: "Other", path: "/other" },
+  };
 
-const posts: Post[] = [consumeMe, favoriteGames2026];
+const posts: Post[] = [
+  consumeMe,
+  favoriteGames2026,
+  headphoneTanglingSimulator,
+];
 
 export function postsIn(category: CategoryId) {
   return posts
     .filter((post) => post.category === category)
-    .sort((a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title));
+    .sort(
+      (a, b) => b.date.localeCompare(a.date) || a.title.localeCompare(b.title),
+    );
 }
 
 export function findPost(category: CategoryId, slug: string) {
