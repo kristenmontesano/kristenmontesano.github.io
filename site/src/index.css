@@ -549,10 +549,12 @@ nav a[aria-current="page"] {
   text-underline-offset: 0.18em;
 }
 
+.post-body figure,
 .game-entry figure {
-  margin: 0.35rem 0 0.4rem;
+  margin: 0.35rem 0 1.15rem;
 }
 
+.post-body img,
 .game-entry img {
   display: block;
   width: 100%;
@@ -560,6 +562,7 @@ nav a[aria-current="page"] {
   border: 1px solid var(--line);
 }
 
+.post-body figcaption,
 .game-entry figcaption {
   margin-top: 0.4rem;
   color: var(--muted);

@@ -27,7 +27,12 @@ export type GameBlock = {
   image?: PostImage;
 };
 
-export type Block = ParagraphBlock | GameBlock;
+export type ImageBlock = {
+  type: "image";
+  image: PostImage;
+};
+
+export type Block = ParagraphBlock | GameBlock | ImageBlock;
 
 export type Post = {
   slug: string;

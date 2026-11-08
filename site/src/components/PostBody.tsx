@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Block, StoreLink, TextPart } from "../content/types";
+import type { Block, PostImage, StoreLink, TextPart } from "../content/types";
 
 function ExternalLink({
   href,
@@ -83,15 +83,32 @@ function PlayOn({ stores }: { stores: StoreLink[] }) {
   );
 }
 
+function PostFigure({ image }: { image: PostImage }) {
+  return (
+    <figure>
+      <img src={image.src} alt={image.alt} />
+      <figcaption>Image credit: {image.credit}</figcaption>
+    </figure>
+  );
+}
+
 export function PostBody({ blocks }: { blocks: Block[] }) {
   return (
     <div className="post-body">
-      {blocks.map((block, index) =>
-        block.type === "paragraph" ? (
-          <p key={index}>
-            <RichText parts={block.text} />
-          </p>
-        ) : (
+      {blocks.map((block, index) => {
+        if (block.type === "paragraph") {
+          return (
+            <p key={index}>
+              <RichText parts={block.text} />
+            </p>
+          );
+        }
+
+        if (block.type === "image") {
+          return <PostFigure key={index} image={block.image} />;
+        }
+
+        return (
           <section className="game-entry" key={block.title}>
             <h2>
               <ExternalLink href={block.href}>{block.title}</ExternalLink>
@@ -100,15 +117,10 @@ export function PostBody({ blocks }: { blocks: Block[] }) {
             <p>
               <RichText parts={block.text} />
             </p>
-            {block.image ? (
-              <figure>
-                <img src={block.image.src} alt={block.image.alt} />
-                <figcaption>Image credit: {block.image.credit}</figcaption>
-              </figure>
-            ) : null}
+            {block.image ? <PostFigure image={block.image} /> : null}
           </section>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }

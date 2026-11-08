@@ -1,4 +1,5 @@
 import type { CategoryId, Post } from "./types";
+import { consumeMe } from "./posts/consume-me";
 import { favoriteGames2026 } from "./posts/favorite-games-2026";
 
 export const categoryMeta: Record<
@@ -10,7 +11,7 @@ export const categoryMeta: Record<
   other: { title: "Other", path: "/other" },
 };
 
-const posts: Post[] = [favoriteGames2026];
+const posts: Post[] = [consumeMe, favoriteGames2026];
 
 export function postsIn(category: CategoryId) {
   return posts
