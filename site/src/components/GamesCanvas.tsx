@@ -72,10 +72,13 @@ void main() {
 const covers: { id: string; title: string; src?: string }[] = [
   { id: "1174180", title: "Red Dead Redemption 2" },
   { id: "2000120", title: "Time Flies" },
-  { id: "2366980", title: "Thank Goodness You're Here!" },
   { id: "1456880", title: "ElecHead" },
   { id: "1663850", title: "Replaced" },
-  { id: "2359120", title: "Consume Me" },
+  {
+    id: "3760370",
+    title: "Kick",
+    src: "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/3760370/5e0238f29c105ffe87edabb481c24086654a98f7/library_600x900_2x.jpg",
+  },
   {
     id: "2364580",
     title: "Titanium Court",
